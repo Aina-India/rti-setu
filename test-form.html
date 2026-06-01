@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RTI Setu — Test Form (mock rtionline.gov.in)</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 18px; background: #f4f4f0; color: #1a1a1a; }
+  h1 { font-size: 18px; }
+  .note { background: #fff3e0; border: 1px solid #e8650a; border-radius: 8px; padding: 10px 14px; font-size: 13px; margin-bottom: 20px; }
+  label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 5px; }
+  input, textarea, select { width: 100%; padding: 8px 10px; font-size: 14px; border: 1px solid #aaa; border-radius: 6px; font-family: inherit; }
+  textarea { resize: vertical; }
+  .cap-wrap { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+  #captchaImage { width: 130px; height: 44px; background: #ddd; border: 1px solid #999; display: flex; align-items: center; justify-content: center; font-family: monospace; font-size: 20px; letter-spacing: 3px; color: #555; font-style: italic; }
+  .row { display: flex; gap: 12px; }
+  .row > div { flex: 1; }
+  button { margin-top: 20px; padding: 10px 20px; background: #1a4480; color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+  .chk { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+  .chk input { width: auto; }
+</style>
+</head>
+<body>
+  <h1>Mock RTI Request Form</h1>
+  <div class="note">
+    <strong>Testing only.</strong> This page mirrors the field <code>name=</code> attributes used on rtionline.gov.in's request form so you can test content.js auto-fill locally without touching the live portal. Load the extension, open the popup, draft an RTI, and click "Open portal and auto-fill" after temporarily pointing <code>openPortalAndFill()</code> at this file (see README → Testing).
+  </div>
+
+  <!-- Field names mirror the real portal. If the real portal differs, update SEL in content.js. -->
+  <label for="ministry_id">Select Ministry/Department</label>
+  <select name="ministry_id" id="ministry_id">
+    <option value="">-- Select --</option>
+    <option value="1">Ministry of Environment, Forest and Climate Change</option>
+    <option value="2">Ministry of Finance</option>
+    <option value="3">Ministry of Education</option>
+    <option value="4">Ministry of Home Affairs</option>
+    <option value="5">Ministry of Law and Justice</option>
+    <option value="6">Ministry of Information and Broadcasting</option>
+  </select>
+
+  <label for="applicant_name">Name of the Applicant</label>
+  <input type="text" name="applicant_name" id="applicant_name" />
+
+  <label for="address">Address</label>
+  <textarea name="address" id="address" rows="3"></textarea>
+
+  <div class="row">
+    <div>
+      <label for="email_id">Email</label>
+      <input type="email" name="email_id" id="email_id" />
+    </div>
+    <div>
+      <label for="cemail_id">Confirm Email</label>
+      <input type="email" name="cemail_id" id="cemail_id" />
+    </div>
+  </div>
+
+  <label for="mobile_no">Mobile Number</label>
+  <input type="tel" name="mobile_no" id="mobile_no" />
+
+  <div class="chk">
+    <input type="checkbox" name="bpl" id="bpl" />
+    <label for="bpl" style="margin:0;font-weight:400;">Below Poverty Line (BPL) — fee exempt</label>
+  </div>
+
+  <label for="statement">Text for RTI Request Application</label>
+  <textarea name="statement" id="statement" rows="8" maxlength="3000"></textarea>
+
+  <label for="security_code">Security Code (CAPTCHA)</label>
+  <div class="cap-wrap">
+    <div id="captchaImage">7K9F2</div>
+    <input type="text" name="security_code" id="security_code" style="max-width:160px;" />
+  </div>
+
+  <button type="button">Pay ₹10 and Submit (mock)</button>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RTI Setu</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div id="app" class="popup">
+
+    <!-- ── HERO / HEADER ─────────────────────────────────────────────── -->
+    <header class="hero">
+      <div class="wheel-wrap" id="wheelWrap" aria-hidden="true"></div>
+
+      <div class="brand-block" id="brandBlock">
+        <div class="brand-name">RTI Setu</div>
+        <div class="brand-tagline">सत्यमेव जयते · Truth alone prevails</div>
+      </div>
+
+      <div class="typing-bar" id="typingBar">
+        <span class="typing-text" id="typer"></span><span class="cursor"></span>
+      </div>
+
+      <!-- logged-in chip + dashboard button (hidden until logged in) -->
+      <div class="account-row" id="accountRow" hidden>
+        <button class="dash-btn" id="dashBtn" type="button">
+          <span class="ti">▦</span> Dashboard
+        </button>
+        <div class="avatar-btn" id="avatarBtn">
+          <span class="avatar-circle" id="avatarInitials">KR</span>
+          <span class="avatar-meta">
+            <span class="avatar-name" id="avatarName">You</span>
+            <span class="avatar-level" id="avatarLevel">Lv 1</span>
+          </span>
+        </div>
+      </div>
+
+      <nav class="steps-rail" id="stepsRail" aria-label="Progress">
+        <div class="su"><span class="sp live" data-step="1">1</span><span class="sl live">Setup</span></div>
+        <div class="sdash"></div>
+        <div class="su"><span class="sp idle" data-step="2">2</span><span class="sl">Draft</span></div>
+        <div class="sdash"></div>
+        <div class="su"><span class="sp idle" data-step="3">3</span><span class="sl">File</span></div>
+      </nav>
+    </header>
+
+    <!-- restore banner -->
+    <div class="restore-banner" id="restoreBanner" hidden>
+      <span class="rb-dot"></span>
+      <span class="rb-text" id="restoreText"></span>
+      <button class="rb-btn" id="restoreClear" type="button">Clear</button>
+    </div>
+
+    <!-- gamification strip -->
+    <section class="gamebar" id="gamebar">
+      <div class="xp-top">
+        <span class="xp-lbl" id="xpTrackLabel">Civic XP</span>
+        <span class="xp-level" id="xpLevelLabel">Lv 1 · Curious Citizen</span>
+      </div>
+      <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+      <div class="streak-row">
+        <div class="streak-card">
+          <span class="s-ico">⚡</span>
+          <span><span class="s-num" id="streakNum">0</span><span class="s-lbl">Day streak</span></span>
+        </div>
+        <div class="badge-card" id="badgeCard">
+          <span class="b-ico">★</span>
+          <span><span class="b-name" id="badgeName">No badge yet</span><span class="b-sub" id="badgeSub">File your first RTI</span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STEP 1: SETUP ─────────────────────────────────────────────── -->
+    <section class="body step" id="step1">
+      <div class="lbl">AI provider</div>
+      <div class="pvd-grid" id="providerGrid">
+        <button class="pvd sel" data-provider="claude" type="button">
+          <span class="pvd-icon">◆</span>
+          <span class="pvd-n">Claude</span>
+          <span class="pvd-h">Anthropic · API key</span>
+        </button>
+        <button class="pvd" data-provider="openai" type="button">
+          <span class="pvd-icon">●</span>
+          <span class="pvd-n">OpenAI</span>
+          <span class="pvd-h">GPT-4o · API key</span>
+        </button>
+        <button class="pvd" data-provider="gemini" type="button">
+          <span class="pvd-icon">◈</span>
+          <span class="pvd-n">Gemini</span>
+          <span class="pvd-h">Google AI · API key</span>
+        </button>
+        <button class="pvd" data-provider="ollama" type="button">
+          <span class="pvd-icon">▢</span>
+          <span class="pvd-n">Local / Ollama</span>
+          <span class="pvd-h">Custom endpoint</span>
+        </button>
+      </div>
+
+      <div class="chat-row">
+        <span class="cr-i">ⓘ</span>
+        <span class="cr-t">No API key? <a href="#" id="useClaudeAi" class="cr-link">Use the claude.ai drafting path</a> — opens a pre-filled prompt in a new tab. Free with any Claude plan.</span>
+      </div>
+
+      <div class="api-wrap" id="apiWrap">
+        <div class="lbl small">API key · memory only, never saved</div>
+        <div class="inp-row">
+          <input class="inp" id="apiKey" type="password" placeholder="sk-ant-..." autocomplete="off" spellcheck="false" />
+          <span class="vbadge" id="apiBadge" hidden>✓ Valid</span>
+        </div>
+        <div class="endpoint-row" id="endpointRow" hidden>
+          <input class="inp" id="endpoint" type="text" placeholder="http://localhost:11434/v1/chat/completions" autocomplete="off" />
+        </div>
+        <div class="mem-pill">🔒 Cleared on browser close · never touches disk</div>
+      </div>
+
+      <div class="skip-row" id="skipRow">
+        <div>
+          <div class="skip-l">Skip AI — self-write mode</div>
+          <div class="skip-sub">Use the extension only to auto-fill the form</div>
+        </div>
+        <button class="tog" id="skipToggle" type="button" role="switch" aria-checked="false">
+          <span class="tok"></span>
+        </button>
+      </div>
+
+      <div class="divider"></div>
+      <div class="lbl">Your details · saved locally, pre-filled next time</div>
+      <div class="persist-note">
+        <span class="pn-i">💾</span>
+        <span class="pn-t">Saved in <code>storage.local</code> — persists across sessions, sent only to rtionline.gov.in.</span>
+      </div>
+
+      <div class="fw"><input class="inp" id="fName" type="text" placeholder="Full name (as on ID)" /></div>
+      <div class="fw"><input class="inp" id="fAddress" type="text" placeholder="Complete postal address" /></div>
+      <div class="two">
+        <div class="fw"><input class="inp" id="fEmail" type="email" placeholder="Email" /></div>
+        <div class="fw"><input class="inp" id="fMobile" type="tel" placeholder="Mobile (optional)" /></div>
+      </div>
+
+      <div class="err" id="step1Err" hidden></div>
+      <button class="cta" id="toStep2" type="button">Continue to Draft →</button>
+    </section>
+
+    <!-- ── STEP 2: DRAFT ─────────────────────────────────────────────── -->
+    <section class="body step" id="step2" hidden>
+      <div class="lbl">Describe your issue in plain language</div>
+      <textarea class="issue-ta" id="issueText" placeholder="e.g. I want the EIA clearance documents for the data centre project in Visakhapatnam, including water consumption approvals."></textarea>
+
+      <div class="ai-row" id="aiRow">
+        <button class="draft-btn" id="draftBtn" type="button">✦ Draft RTI</button>
+        <button class="chat-btn" id="chatBtn" type="button">↗ claude.ai</button>
+        <button class="skip-btn" id="selfWriteBtn" type="button">✎ Self-write</button>
+      </div>
+
+      <div class="thinking-row" id="thinkingRow" hidden>
+        <span class="t-dot"></span><span class="t-dot"></span><span class="t-dot"></span>
+        <span id="thinkingMsg">Drafting your RTI…</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="ministry-row" id="ministryRow" hidden>
+        <span class="min-pill" id="ministryPill">Ministry</span>
+        <span class="edit-hint">Edit below if wrong</span>
+      </div>
+      <div class="fw" id="ministryEditWrap" hidden>
+        <input class="inp" id="ministryInput" type="text" placeholder="Central ministry / department" />
+      </div>
+
+      <div class="lbl">RTI text · edit freely before filing</div>
+      <textarea class="rti-ta" id="rtiText" placeholder="Your RTI application text will appear here. You can also write it yourself."></textarea>
+      <div class="char-row">
+        <span class="char-ok" id="charOk">✓ Within limit</span>
+        <span class="char-ct" id="charCount">0 / 3000</span>
+      </div>
+      <div class="char-track"><div class="char-fill" id="charFill"></div></div>
+
+      <div class="vault-card">
+        <div class="vc-head"><span>🛡</span><span class="vc-title">Draft vault · auto-saved, survives tab close</span></div>
+        <div class="vc-body">Everything here is stored in <code>storage.local</code> and restored automatically next time.</div>
+      </div>
+
+      <div class="tip-box" id="stateTip" hidden>
+        <span class="tb-i">⚠</span>
+        <span class="tb-t" id="stateTipText"></span>
+      </div>
+
+      <div class="row-between">
+        <button class="ghost-btn" id="backTo1" type="button">← Back</button>
+        <button class="next-btn" id="toStep3" type="button">Proceed to File →</button>
+      </div>
+    </section>
+
+    <!-- ── STEP 3: FILE ──────────────────────────────────────────────── -->
+    <section class="body step" id="step3" hidden>
+      <div class="summary-card" id="summaryCard"></div>
+
+      <div class="lbl small">BPL card status</div>
+      <select class="ext-sel" id="bplSelect">
+        <option value="no">No — I will pay ₹10</option>
+        <option value="yes">Yes — BPL card (fee waived)</option>
+      </select>
+
+      <div class="divider"></div>
+      <div class="lbl">What happens next</div>
+      <ol class="steps-list">
+        <li><span class="sn">1</span>Opens rtionline.gov.in in a new tab</li>
+        <li><span class="sn">2</span>Clicks past the guidelines page automatically</li>
+        <li><span class="sn">3</span>Fills ministry, name, address, email, mobile and RTI text</li>
+        <li><span class="sn">4</span><strong>Pauses at the CAPTCHA — you solve it manually</strong></li>
+        <li><span class="sn">5</span>You pay ₹10 and submit on the portal</li>
+      </ol>
+
+      <div class="captcha-card">
+        <div class="cc-head"><span>🛡</span><span class="cc-title">CAPTCHA — you must solve this</span></div>
+        <div class="cc-body">This field will be outlined in orange when the form opens. Type the characters, then pay ₹10 and submit.</div>
+      </div>
+
+      <div class="security-strip">
+        <span class="ss-i">🛡</span>
+        <span class="ss-t">Form data in session storage is wiped immediately after fill. Your draft stays in the vault until you mark it filed.</span>
+      </div>
+
+      <div class="refail-strip" id="refillStrip" hidden>
+        <span class="rf-t">Portal timed out or dropped your form?</span>
+        <button class="rf-btn" id="refillBtn" type="button">↻ Re-fill</button>
+      </div>
+
+      <div class="row-between">
+        <button class="ghost-btn" id="backTo2" type="button">← Back</button>
+        <button class="file-btn" id="fileBtn" type="button">↗ Open portal and auto-fill</button>
+      </div>
+      <button class="mark-filed" id="markFiledBtn" type="button" hidden>I've submitted — mark as filed</button>
+    </section>
+
+    <!-- ── STEP 4: POST-FILE / OPTIONAL LOGIN ───────────────────────── -->
+    <section class="body step postgame" id="step4" hidden>
+      <div class="filed-mark" id="filedMark">✓ RTI filed</div>
+      <div class="ministry-line" id="filedMinistryLine"></div>
+
+      <div class="xp-burst">
+        <div class="xp-top">
+          <span class="xp-lbl" id="pgTrackLabel">Civic XP</span>
+          <span class="xp-gained" id="pgGained">+50 XP this session</span>
+        </div>
+        <div class="xp-track"><div class="xp-fill" id="pgFill"></div></div>
+        <div class="xp-sub" id="pgSub"></div>
+      </div>
+
+      <div class="badges-row" id="pgBadges"></div>
+
+      <div class="divider"></div>
+
+      <div class="login-section" id="loginSection">
+        <div class="ls-headline">Keep your streak across devices</div>
+        <div class="ls-sub">Your XP and badges are saved locally right now. Create a free account to sync across devices, get 30-day deadline alerts, and appear on the civic leaderboard.</div>
+        <div class="perks-grid">
+          <div class="perk"><span class="pk-i">⧉</span><span class="pk-t"><strong>Cross-device sync</strong>Phone or laptop</span></div>
+          <div class="perk"><span class="pk-i">🏆</span><span class="pk-t"><strong>Leaderboard</strong>City · state · national</span></div>
+          <div class="perk"><span class="pk-i">🔔</span><span class="pk-t"><strong>Deadline alerts</strong>30-day reminders</span></div>
+          <div class="perk"><span class="pk-i">⚇</span><span class="pk-t"><strong>RTI network</strong>See what others file</span></div>
+        </div>
+        <button class="login-btn" id="loginBtn" type="button">＋ Create free account · unlock leaderboard</button>
+        <div class="skip-line"><a href="#" id="skipLogin" class="skip-link">No thanks — keep XP local only</a></div>
+        <div class="local-note">
+          <span class="ln-i">🔒</span>
+          <span class="ln-t">Your XP and badges are already saved on this device. Nothing is lost if you skip — you can create an account any time.</span>
+        </div>
+      </div>
+
+      <button class="cta" id="fileAnother" type="button">File another RTI</button>
+    </section>
+
+    <!-- ── FOOTER ────────────────────────────────────────────────────── -->
+    <footer class="foot">
+      <span class="ft">सत्यमेव जयते · RTI Act, 2005</span>
+      <span class="saved-ind" id="savedInd"><span class="saved-dot"></span><span id="savedText">Draft saved</span></span>
+    </footer>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
