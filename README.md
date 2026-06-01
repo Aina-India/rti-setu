@@ -3,12 +3,23 @@
 **Your right. Your demand. Filed.**
 *सत्यमेव जयते · Truth alone prevails*
 
-A cross-browser (Chrome / Edge / Firefox, Manifest V3) extension that drafts a
-legally-correct Right to Information request from a plain-language description,
-then auto-fills it on India's central RTI portal **rtionline.gov.in** — pausing
-at the CAPTCHA for you to solve manually. Includes a local Civic XP system,
-badges, day-streaks, and an optional synced dashboard with deadline reminders
-and leaderboards.
+A cross-browser (Chrome / Edge / Firefox, Manifest V3) extension that helps any
+citizen — including a first-time, non-technical filer — write a legally-correct
+Right to Information request and auto-fill it on India's central RTI portal
+**rtionline.gov.in**, pausing at the CAPTCHA for you to solve manually.
+
+**v2 is free-by-default and template-first.** Drafting lives in a roomy, fully
+offline **web app** (`app.html`, opens in its own tab); the toolbar **popup is a
+thin launcher**. You pick a topic, answer 2–4 plain-language questions, and a
+proper RTI is generated — **no AI, no account, no cost**. AI is optional and never
+on the critical path. A local Civic XP system (badges, day-streaks) stays visible
+as the engagement hook. UI is built for six languages (Hindi, Bengali, Telugu,
+Marathi, Tamil, English); the filed RTI body is English (Hindi also accepted).
+
+> The four ways to produce an RTI — **templates** (default), **self-write**,
+> **open-in-chat with a pre-filled prompt**, and **your own API key** (Advanced) —
+> are being rolled out in stages. Stage 1 (this build) ships the offline core:
+> templates + self-write + the verification gate + portal auto-fill.
 
 > ⚠️ **rtionline.gov.in covers only CENTRAL government ministries.** State-level
 > matters (municipal, state police, land records, etc.) must go to the relevant
@@ -22,20 +33,28 @@ and leaderboards.
 ```
 rti-setu/
 ├── manifest.json          MV3 manifest (Chrome/Edge/Firefox)
-├── background.js          Service worker — session access, deadline alarms
+├── background.js          Service worker — session access, deadline alarms, OPEN_APP
 ├── content.js             Auto-fills the portal form  ← edit SEL here if the site changes
-├── popup.html/.css/.js    The 3-step extension popup + opening ceremony
-├── dashboard.html/.css/.js Full-page dashboard (history, tracks, leaderboard)
+├── app.html/.css/.js      The full-tab web app: wizard, editor, verify, history (the primary surface)
+├── popup.html/.css/.js    Thin launcher — open the app · draft status · "Fill the portal form now"
 ├── test-form.html         Local mock of the portal form for safe testing
 ├── lib/
-│   ├── ai-providers.js    Claude / OpenAI / Gemini / Ollama + claude.ai fallback
-│   ├── ministry-map.js    Ministry → civic track mapping, state-matter hints
-│   ├── xp-engine.js        Civic XP, levels, streaks, badges (all local)
-│   ├── dyk-cards.js        Curated "Did You Know" pool + selection logic
-│   └── storage.js          Enforces the memory/local/session security model
+│   ├── template-engine.js  Renders RTIs from templates ({blankId}, {_authority}, [[optional]] segments)
+│   ├── templates-education.js  Education template pack (6 seed templates, ES module)
+│   ├── templates-index.js  Enumerates all template packs
+│   ├── ministries.json     Canonical central ministry list (hint; live-reconciled at fill time)
+│   ├── validity.js         Verification-gate checks (source-aware; opinion-seeking for self-write/AI only)
+│   ├── i18n.js + strings/   UI string runtime + per-language tables (en complete; hi/bn/te/mr/ta scaffolded)
+│   ├── ai-providers.js     Claude / OpenAI / Gemini / Ollama + claude.ai fallback (Advanced, Stage 2)
+│   ├── ministry-map.js     Ministry → civic track mapping, state-matter hints
+│   ├── xp-engine.js         Civic XP, levels, streaks, badges (all local)
+│   ├── dyk-cards.js         Curated "Did You Know" pool + selection logic
+│   └── storage.js           Enforces the memory/local/session security model
 ├── icons/                 Dharmachakra icons (16/32/48/128)
 └── fonts/                 Drop WOFF2 files here (see fonts/README.txt)
 ```
+*(The v1 `dashboard.html` is retired — history, tracks and the local account stub
+are now views inside `app.html`.)*
 
 ---
 
@@ -151,17 +170,23 @@ The fields tracked: `ministry`, `name`, `address`, `email`, `emailConfirm`,
 
 ## Testing (3 phases)
 
-**Phase 1 — popup in isolation.** Load the extension, open the popup. Verify the
-wheel animates, the typing carousel runs, provider selection works, details
-save and restore. No portal needed.
+**Phase 1 — web app standalone.** Open `app.html` (load the extension, then open
+it from the popup's "Open RTI Setu", or open the extension URL directly). Pick a
+language → a topic → answer the questions → read the generated RTI in the
+letterhead editor → pass the verification step. No portal, no permissions needed.
+Worth spot-checking the derived-authority cases: edu-002 *Conducting body* = SSC
+should target **Department of Personnel and Training**; edu-005 scheme = RUSA
+should target **Ministry of Education**; choosing **Other** routes to the ministry
+autocomplete. Leave optional blanks empty and confirm no broken "for the post of ,"
+fragments appear.
 
-**Phase 2 — local mock form.** Open `test-form.html` directly in the browser.
-Temporarily change the URL in `popup.js → openPortalAndFill()` from
-`https://rtionline.gov.in/request/request.php` to the `file://…/test-form.html`
-path, and add that file's origin to `content_scripts.matches` + `host_permissions`
-in `manifest.json`. Draft an RTI, click "Open portal and auto-fill", and confirm
-every field fills and the CAPTCHA box gets the orange outline. Revert the URL
-afterwards.
+**Phase 2 — local mock form.** Open `test-form.html` directly in the browser
+(its field `name=` attributes mirror the real portal). Temporarily add that file's
+origin to `content_scripts.matches` + `host_permissions` in `manifest.json`, and
+point `popup.js → PORTAL_URL` at it. In the app, draft + verify an RTI; then open
+the popup and click **"Fill the portal form now"** (enabled only once a draft is
+verified). Confirm every field fills, the resolved ministry matches a live
+`<option>`, and the CAPTCHA box gets the orange outline. Revert afterwards.
 
 **Phase 3 — live portal.** Use the real site. The first thing to verify is the
 **entry URL and page flow** — see the next section.
@@ -214,9 +239,9 @@ city/state/national leaderboards. A **Dashboard** button and avatar chip appear
 in the popup header once you're signed in; the dashboard opens as a full page in
 a new tab.
 
-> The account flow in `dashboard.js` is currently a **local-only demo stub**
-> (a display-name prompt) so the sync/leaderboard UI is exercisable. Wire it to
-> your real auth + sync backend before shipping the account feature.
+> The account flow is a **local-only stub** (no backend). History and tracks live
+> in `app.html`; wire a real auth + sync backend before shipping the account /
+> leaderboard feature. There is no RTI Setu server in this build.
 
 ---
 

@@ -127,12 +127,14 @@ function fillText(strategies, value) {
   return true;
 }
 
-function selectMinistryByText(strategies, ministryName) {
-  const el = pick(strategies);
-  if (!el || el.tagName !== "SELECT") return false;
-  const target = ministryName.trim().toLowerCase();
-  let best = null;
-  let bestScore = 0;
+// Score one candidate name against the LIVE <select> options and return the best
+// option (or null if nothing clears the threshold). Reading el.options here IS the
+// live reconciliation — we match against whatever the portal currently renders,
+// so a drifted bundled ministries.json never breaks the fill.
+function bestOptionFor(el, name) {
+  const target = String(name || "").trim().toLowerCase();
+  if (!target) return null;
+  let best = null, bestScore = 0;
   for (const opt of el.options) {
     const txt = opt.textContent.trim().toLowerCase();
     if (!txt) continue;
@@ -140,15 +142,24 @@ function selectMinistryByText(strategies, ministryName) {
     if (txt === target) score = 100;
     else if (txt.includes(target) || target.includes(txt)) score = 60;
     else {
-      // token overlap
       const a = new Set(target.split(/\s+/));
       const b = txt.split(/\s+/);
-      const overlap = b.filter((w) => a.has(w)).length;
-      score = overlap * 10;
+      score = b.filter((w) => a.has(w)).length * 10;
     }
     if (score > bestScore) { bestScore = score; best = opt; }
   }
-  if (best && bestScore >= 20) {
+  return best && bestScore >= 20 ? best : null;
+}
+
+// Prefer the resolved `authority` (the canonical name the app picked), then fall
+// back to `ministry`. Returns true if a live option was selected.
+function selectMinistryByText(strategies, payload) {
+  const el = pick(strategies);
+  if (!el || el.tagName !== "SELECT") return false;
+  const best =
+    bestOptionFor(el, payload.authority) ||
+    (payload.ministry && payload.ministry !== payload.authority ? bestOptionFor(el, payload.ministry) : null);
+  if (best) {
     el.value = best.value;
     el.dispatchEvent(new Event("change", { bubbles: true }));
     return true;
@@ -182,7 +193,7 @@ function highlightCaptcha() {
   return !!input;
 }
 
-function showBanner(filledCount, captchaFound) {
+function showBanner(filledCount, captchaFound, ministryMatched = true) {
   document.getElementById("rti-setu-banner")?.remove();
   const bar = document.createElement("div");
   bar.id = "rti-setu-banner";
@@ -211,9 +222,12 @@ function showBanner(filledCount, captchaFound) {
   });
   const msg = document.createElement("span");
   msg.style.flex = "1";
-  msg.innerHTML = captchaFound
+  const ministryNote = ministryMatched
+    ? ""
+    : ` <strong style="color:${ORANGE}">Pick the ministry manually</strong> — we couldn't match it automatically.`;
+  msg.innerHTML = (captchaFound
     ? `<strong>RTI Setu</strong> filled ${filledCount} field${filledCount === 1 ? "" : "s"}. Complete the <strong style="color:${ORANGE}">CAPTCHA highlighted in orange</strong>, then pay ₹10 and submit.`
-    : `<strong>RTI Setu</strong> filled ${filledCount} field${filledCount === 1 ? "" : "s"}. Scroll down to find the CAPTCHA, complete it, then pay ₹10 and submit.`;
+    : `<strong>RTI Setu</strong> filled ${filledCount} field${filledCount === 1 ? "" : "s"}. Scroll down to find the CAPTCHA, complete it, then pay ₹10 and submit.`) + ministryNote;
   const close = document.createElement("button");
   close.textContent = "✕";
   Object.assign(close.style, {
@@ -241,7 +255,8 @@ function onRequestForm() {
 
 async function fillForm(payload) {
   let filled = 0;
-  if (selectMinistryByText(SEL.ministry, payload.ministry)) filled++;
+  const ministryMatched = selectMinistryByText(SEL.ministry, payload);
+  if (ministryMatched) filled++;
   if (fillText(SEL.name, payload.name)) filled++;
   if (fillText(SEL.address, payload.address)) filled++;
   if (fillText(SEL.email, payload.email)) filled++;
@@ -251,7 +266,7 @@ async function fillForm(payload) {
   if (fillText(SEL.statement, payload.rtiText)) filled++;
 
   const captchaFound = highlightCaptcha();
-  showBanner(filled, captchaFound);
+  showBanner(filled, captchaFound, ministryMatched);
 
   // Tell the background worker the fill is done (so XP is recorded even if the
   // popup is closed), then WIPE the session payload immediately.

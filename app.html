@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RTI Setu</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <!-- ── OPENING CEREMONY (overlay, painted by app.js on every page load) ── -->
+  <div class="ceremony" id="ceremony" aria-hidden="true" hidden></div>
+
+  <div class="app">
+    <!-- ── TOP BAR (persistent) ─────────────────────────────────────────── -->
+    <header class="topbar">
+      <div class="tb-brand">
+        <span class="tb-mark" id="tbMark" aria-hidden="true"></span>
+        <div class="tb-textcol">
+          <span class="tb-name" id="brandName">RTI Setu</span>
+          <span class="tb-tagline" id="brandTagline">सत्यमेव जयते · Truth alone prevails</span>
+          <span class="tb-carousel" aria-hidden="true"><span class="tb-typer" id="tbTyper"></span><span class="tb-cursor"></span></span>
+        </div>
+      </div>
+
+      <div class="tb-actions">
+        <button class="tb-btn" id="navHistoryBtn" type="button"></button>
+        <button class="tb-btn" id="navNewBtn" type="button"></button>
+        <div class="lang-picker">
+          <button class="tb-btn lang-btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false">
+            <span aria-hidden="true">&#127760;</span> <span id="langBtnLabel">English</span>
+          </button>
+          <ul class="lang-menu" id="langMenu" role="listbox" hidden></ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── GAMEBAR (persistent, curiosity hook — never hidden) ──────────── -->
+    <section class="gamebar" id="gamebar" aria-label="Your civic progress">
+      <div class="gb-xp">
+        <div class="gb-xp-top">
+          <span class="gb-lbl" id="gbXpLabel">Civic XP</span>
+          <span class="gb-level" id="gbLevelLabel">Lv 1 · Curious Citizen</span>
+        </div>
+        <div class="gb-track"><div class="gb-fill" id="gbXpFill"></div></div>
+      </div>
+      <div class="gb-stats">
+        <div class="gb-stat gb-streak">
+          <span class="gb-flame" aria-hidden="true">⚡</span>
+          <span class="gb-stat-col">
+            <span class="gb-stat-num" id="gbStreak">0</span>
+            <span class="gb-stat-lbl" id="gbStreakLbl">Day streak</span>
+          </span>
+        </div>
+        <div class="gb-stat gb-badge" id="gbBadge">
+          <span class="gb-stat-num" id="gbBadgeName">??? </span>
+          <span class="gb-stat-lbl" id="gbBadgeSub">file one RTI to reveal</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── PROGRESS RAIL (Choose → Write → Check → File; filled by app.js) ── -->
+    <nav class="steps-rail" id="stepsRail" aria-label="Progress" hidden></nav>
+
+    <!-- ── SCREEN HOST — app.js replaces this per wizard step ───────────── -->
+    <main class="screen" id="screen" aria-live="polite"></main>
+
+    <!-- ── FOOTER ───────────────────────────────────────────────────────── -->
+    <footer class="appfoot">
+      <span class="af-act" id="footActLabel"></span>
+      <span class="af-saved" id="savedInd" hidden><span class="af-dot"></span><span id="savedText"></span></span>
+    </footer>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

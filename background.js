@@ -29,8 +29,10 @@ ensureSessionAccess();
 
 // --- messaging ---
 browserApi.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg.type === "OPEN_DASHBOARD") {
-    browserApi.tabs.create({ url: browserApi.runtime.getURL("dashboard.html") });
+  if (msg.type === "OPEN_APP" || msg.type === "OPEN_DASHBOARD") {
+    // The full-tab web app is now the single surface (dashboard.html retired in v2).
+    // OPEN_DASHBOARD kept as an alias so any older caller still lands on the app.
+    browserApi.tabs.create({ url: browserApi.runtime.getURL("app.html") });
     sendResponse({ ok: true });
     return true;
   }

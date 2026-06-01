@@ -54,7 +54,7 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["dashboard.html", "fonts/*", "lib/*"],
+      "resources": ["app.html", "fonts/*", "lib/*"],
       "matches": ["https://rtionline.gov.in/*"]
     }
   ],
